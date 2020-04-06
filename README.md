@@ -1,6 +1,6 @@
 # Abridged Web Wallet Frame Provider
 
-Connect dapps into Abridged web wallet sdk via iFrame web3-proxy.
+This provider connects dapps into the Abridged web wallet sdk, by using iFrame and child frame web3 polyfill.
 
 `
 npm install @abridged/web-wallet-frame-sdk
