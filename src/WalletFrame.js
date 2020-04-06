@@ -1,18 +1,21 @@
 export class FrameProvider {
-    constructor(sdk, windowRef, iframRef, frameSrc) {
-        this.iframRef = iframRef;
+    // pubkey - web wallet public key
+    constructor(sdk, windowRef, pubkey) {
         this.sdk = sdk;
         this._window = windowRef;
-        this.frameSrc = frameSrc;
+        this.pubkey = pubkey;
+        this.account = pubkey;
     }
 
-    async setup(pubkey) {
-        if (!this.account) this.account = pubkey;
-        if (!pubkey && !this.account) throw new Error("provide pub address");
+    async setup(iframRef, frameSrc) {
+        if (!this.pubkey && !this.account) throw new Error("provide pub address");
+
+        this.frameSrc = frameSrc;
+        this.iframRef = iframRef;
 
         this._window.addEventListener("message", this.handleIframeTask);
 
-        this.iframRef.src = this.frameSrc;
+        this.iframRef.src = frameSrc;
         return this.account;
     }
 
