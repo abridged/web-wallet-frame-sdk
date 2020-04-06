@@ -1,5 +1,7 @@
 # Abridged Web Wallet Frame Provider
 
+Connect dapps into Abridged web wallet sdk via iFrame web3-proxy
+
 `
 npm install @abridged/web-wallet-frame-sdk
 `
