@@ -1,51 +1,78 @@
-let _iframRef = null;
-let _account = null;
+export class FrameProvider {
+    constructor(sdk, windowRef, iframRef, frameSrc) {
+        this.iframRef = iframRef;
+        this.sdk = sdk;
+        this._window = windowRef;
+        this.frameSrc = frameSrc;
+    }
 
-export function connect(sdk, _window, iframRef, account) {
-    _iframRef = iframRef;
-    _account = account;
-    _window.addEventListener("message", handleIframeTask);
+    async setup(pubkey) {
+        if (!this.account) this.account = pubkey;
+        if (!pubkey && !this.account) throw new Error("provide pub address");
+
+        this._window.addEventListener("message", this.handleIframeTask);
+
+        this.iframRef.src = this.frameSrc;
+        return this.account;
+    }
+
+    stop() {
+        this._window.removeEventListener("message", this.handleIframeTask);
+    }
+
+    handleIframeTask = event => {
+        const data = event.data;
+
+        console.log("handleIframeTask state.account", this.account);
+
+        if (data.jsonrpc) {
+            handleMsg(data, this.account, this.iframRef); // state.account
+        }
+    };
+
+    // Optional if needed to createAccount
+    async createAccount(pubKey) {
+        return await this.sdk.createAccount(pubKey).then(x => {
+            console.log(
+                "x2 postcreateAccount",
+                x.address,
+                `x.deployed=${x.deployed}`
+            );
+            this.account = x.address;
+            return x;
+        });
+    }
 }
 
-const handleIframeTask = async event => {
-    const data = event.data;
-
-    console.log("handleIframeTask state.account", state.account);
-
-    if (data.jsonrpc) {
-      handleMsg(data, _account, _iframRef); // state.account
-    }
-  }
-
-const handleMsg = async (data, acct, refiFrame) => {
+const handleMsg = async(data, acct, refiFrame) => {
     // const provider = window.ethereum;
-  
+
     const method = data.method;
-    const params = data.params;
+    // const params = data.params; // TODO
     const jsonrpc = data.jsonrpc;
     // console.log("state", state);
     console.log("handleIframeTask", data);
     let response = {
-      jsonrpc: jsonrpc,
-      id: data.id
+        jsonrpc: jsonrpc,
+        id: data.id
     };
     if (method === "enable") {
-      // if (state.account)
-      response.result = [acct];
-      // response.result = [];
+        // if (state.account)
+        response.result = [acct];
+        // response.result = [];
     } else if (method === "eth_accounts") {
-      // if (state.account)
-      response.result = { result: [acct] };
-      // response.result = [];
+        // if (state.account)
+        response.result = { result: [acct] };
+        // response.result = [];
     } else {
-        console.warn('non implemented event:', data);
-      // const c = await provider.send(method, params);
-      // response.result = c.result;
+        console.warn("non implemented event:", data);
+        // const c = await provider.send(method, params);
+        // response.result = c.result;
     }
     const msg = {
-      ...response,
-      data: response
+        ...response,
+        data: response
     };
     console.log("responding", msg);
     refiFrame.contentWindow.postMessage(msg, "*"); // TODO .current
-  };
+};
