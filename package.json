@@ -1,0 +1,23 @@
+{
+  "name": "@abridged/web-wallet-frame-sdk",
+  "version": "0.0.3",
+  "private": false,
+  "repository": "git@github.com:abridged/web-wallet-frame-sdk.git",
+  "author": "Jonathan Dunlap <jdunlap@outlook.com>",
+  "license": "MIT",
+  "source": "src/WalletFrame.js",
+  "main": "dist/WalletFrame.js",
+  "module": "dist/WalletFrame.module.js",
+  "unpkg": "dist/WalletFrame.umd.js",
+  "scripts": {
+    "postinstall": "microbundle --name WalletFrame",
+    "build": "microbundle --name WalletFrame",
+    "dev": "microbundle watch"
+  },
+  "dependencies": {
+    "abridged": "^2.0.0-alpha.3"
+  },
+  "devDependencies": {
+    "microbundle": "^0.11.0"
+  }
+}
