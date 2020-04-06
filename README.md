@@ -9,15 +9,13 @@ The parent iFrame should be constructed like:
 ```js
     import { FrameProvider } from "@abridged/web-wallet-frame-sdk";
 
-    let frameSrc = "https://MY_IFRAME_URL";
-
     // SDK - Abridged SDK reference
-    // window - host window
+    // window - browser window reference object
     // WALLET_PUB_KEY - user's web wallet public key
     
     let wallet = new FrameProvider(sdk, window, WALLET_PUB_KEY);
 
-    // setup: Will change the iFrame src to 'frameSrc' attribute above and start listening for web3 calls from child.
+    // The setup function will change the iFrame object src to the target location and start listening for web3 calls from child.
     //
     // refiFrame - current iFrame reference to iFrame dom object
     // frameSrc - url for the IFrame to load once provider is loaded
