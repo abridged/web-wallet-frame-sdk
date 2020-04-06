@@ -4,6 +4,8 @@
 npm install @abridged/web-wallet-frame-sdk
 `
 
+The parent iFrame should be constructed like:
+
 ```js
     import { FrameProvider } from "@abridged/web-wallet-frame-sdk";
 
@@ -21,4 +23,15 @@ npm install @abridged/web-wallet-frame-sdk
     // frameSrc - url for the IFrame to load once provider is loaded
     
     await wallet.setup(refiFrame, frameSrc);
+```
+
+The child iFrame should import the polyfill:
+
+```js
+import '@jadbox/iframe-provider-polyfill'
+```
+
+or add via html:
+```html
+<script src="https://cdn.jsdelivr.net/npm/@jadbox/iframe-provider-polyfill" type="text/javascript"/>
 ```
