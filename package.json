@@ -10,7 +10,6 @@
   "module": "dist/WalletFrame.module.js",
   "unpkg": "dist/WalletFrame.umd.js",
   "scripts": {
-    "postinstall": "microbundle --name WalletFrame",
     "build": "microbundle --name WalletFrame",
     "dev": "microbundle watch"
   },
