@@ -1,12 +1,12 @@
 {
   "name": "@abridged/web-wallet-frame-sdk",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "private": false,
   "repository": "git@github.com:abridged/web-wallet-frame-sdk.git",
   "author": "Jonathan Dunlap <jdunlap@outlook.com>",
   "license": "MIT",
   "source": "src/WalletFrame.js",
-  "main": "dist/WalletFrame.js",
+  "main": "src/WalletFrame.js",
   "module": "dist/WalletFrame.module.js",
   "unpkg": "dist/WalletFrame.umd.js",
   "scripts": {
