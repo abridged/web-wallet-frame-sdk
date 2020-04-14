@@ -1,6 +1,6 @@
 {
   "name": "@abridged/web-wallet-frame-sdk",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "private": false,
   "repository": "git@github.com:abridged/web-wallet-frame-sdk.git",
   "author": "Jonathan Dunlap <jdunlap@outlook.com>",
@@ -13,10 +13,9 @@
     "build": "microbundle --name WalletFrame",
     "dev": "microbundle watch"
   },
-  "dependencies": {
-    "abridged": "^2.0.0-alpha.3"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "abridged": "^2.0.0-alpha.3",
     "microbundle": "^0.11.0"
   }
 }
