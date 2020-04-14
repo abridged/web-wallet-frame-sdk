@@ -23,7 +23,7 @@ export class FrameProvider {
         this._window.removeEventListener("message", this.handleIframeTask);
     }
 
-    handleIframeTask = event => {
+    handleIframeTask(event) {
         const data = event.data;
 
         console.log("handleIframeTask state.account", this.account);
@@ -31,7 +31,7 @@ export class FrameProvider {
         if (data.jsonrpc) {
             handleMsg(data, this.account, this.iframRef); // state.account
         }
-    };
+    }
 
     // Optional if needed to createAccount
     async createAccount(pubKey) {
@@ -46,6 +46,8 @@ export class FrameProvider {
         });
     }
 }
+
+// export default FrameProvider;
 
 const handleMsg = async(data, acct, refiFrame) => {
     // const provider = window.ethereum;
