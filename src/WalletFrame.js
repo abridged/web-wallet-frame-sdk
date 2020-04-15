@@ -1,6 +1,9 @@
 export class FrameProvider {
     // pubkey - web wallet public key
     constructor(sdk, windowRef, pubkey) {
+        if(!sdk) {
+            throw new Error('no sdk provided');
+        }
         this.sdk = sdk;
         this._window = windowRef;
         this.pubkey = pubkey;
@@ -59,7 +62,6 @@ export class FrameProvider {
 
 const handleMsg = async(data, acct, refiFrame, sdk) => {
     // const provider = window.ethereum;
-
     const method = data.method;
     const params = data.params; // TODO
     const jsonrpc = data.jsonrpc;
@@ -84,10 +86,10 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             result = [acct];
             break;
         case "eth_getBalance":
-            options = hasParams ? {address: params[0]} : {}; 
+            options = hasParams ? {address: params[0]} : {};
             const b = await sdk.getBalance(options);
 
-            result = [b];
+            result = b; //BN to wai?
             break;
         case "eth_sendTransaction":
             if(!hasParams) break;
