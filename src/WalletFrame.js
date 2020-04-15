@@ -18,8 +18,13 @@ export class FrameProvider {
 
         this._window.addEventListener("message", this._handleIframeTask);
 
+        const p = new Promise(x => {
+            this.iframRef.addEventListener("load", ()=>{
+                x();
+            });
+        });
         this.iframRef.src = frameSrc;
-        return this.account;
+        return p;
     }
 
     stop() {
@@ -32,7 +37,7 @@ export class FrameProvider {
         // console.log("handleIframeTask state.account", this.account);
 
         if (data.jsonrpc) {
-            handleMsg(data, this.account, this.iframRef); // state.account
+            handleMsg(data, this.account, this.iframRef, this.sdk); // state.account
         }
     }
 
@@ -52,11 +57,11 @@ export class FrameProvider {
 
 // export default FrameProvider;
 
-const handleMsg = async(data, acct, refiFrame) => {
+const handleMsg = async(data, acct, refiFrame, sdk) => {
     // const provider = window.ethereum;
 
     const method = data.method;
-    // const params = data.params; // TODO
+    const params = data.params; // TODO
     const jsonrpc = data.jsonrpc;
     // console.log("state", state);
     console.log("handleIframeTask", data);
@@ -64,26 +69,56 @@ const handleMsg = async(data, acct, refiFrame) => {
         jsonrpc: jsonrpc,
         id: data.id
     };
-    if (method === "enable") {
-        // if (state.account)
-        response.result = [acct];
-        // response.result = [];
-    } else if (method === "eth_accounts") {
-        // if (state.account)
-        response.result = { result: [acct] };
-        // response.result = [];
-    } else {
-        console.warn("non implemented event:", data);
-        // const c = await provider.send(method, params);
-        // response.result = c.result;
+
+    const hasParams = params && params.length > 0;
+    const param1 = hasParams ? params[0] : null;
+
+    let options = {};
+    let result = null;
+    switch(method) {
+        case "enable":
+            // Metamask specific rpc
+            result = [acct];
+            break;
+        case "eth_accounts":
+            result = [acct];
+            break;
+        case "eth_getBalance":
+            options = hasParams ? {address: params[0]} : {}; 
+            const b = await sdk.getBalance(options);
+
+            result = [b];
+            break;
+        case "eth_sendTransaction":
+            if(!hasParams) break;
+            options = {
+                recipient: param1.to,
+                value: toBN(param1.value),
+                data: param1.data,
+            }; 
+            const batch = await sdk.batchExecuteAccountTransaction(options);
+            await sdk.estimateBatch();
+            await sdk.submitBatch();
+            result = [];
+            break;
+        case "eth_gasPrice":
+            result = ["0x0"];
+            break;
+        default:
+            console.warn("non implemented event:", data);
     }
+
+    if(result!==null) {
+        response.result = {result:result};
+    }
+
     const msg = {
         ...response,
-        data: response
+        // data: response
     };
     console.log("responding", msg);
     
-    if(!refiFrame.contentWindow || !refiFrame.contentWindow.postMessage) {
+    if(!refiFrame.contentWindow) {
         console.log('refiFrame.contentWindow', refiFrame.contentWindow);
         throw new Error('cannot access iFrame, check CORS');
     }
