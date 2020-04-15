@@ -88,8 +88,10 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
         case "eth_getBalance":
             options = hasParams ? {address: params[0]} : {};
             const b = await sdk.getBalance(options);
+            console.log('getBalance', b);
 
-            result = b; //BN to wai?
+            // FOR TESTING
+            result = b.toNumber().toString(16); // b; //BN to wai?
             break;
         case "eth_sendTransaction":
             if(!hasParams) break;
@@ -104,10 +106,13 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             result = [];
             break;
         case "eth_gasPrice":
-            result = ["0x0"];
+            result = "0x0";
             break;
+        case "web3_clientVersion":
+            result = "3frame/0.0.11";
         default:
             console.warn("non implemented event:", data);
+            result = "";
     }
 
     if(result!==null) {
