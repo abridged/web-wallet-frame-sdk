@@ -91,7 +91,7 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             console.log('getBalance', b);
 
             // FOR TESTING
-            result = b.toNumber().toString(16); // b; //BN to wai?
+            result = '0x0' + b.toString(16); // b; //BN to wai?
             break;
         case "eth_sendTransaction":
             if(!hasParams) break;
@@ -131,3 +131,5 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
     }
     else refiFrame.contentWindow.postMessage(msg, "*"); // TODO .current
 };
+
+export default FrameProvider;

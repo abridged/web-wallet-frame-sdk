@@ -7,7 +7,6 @@
   "license": "MIT",
   "source": "src/WalletFrame.js",
   "main": "src/WalletFrame.js",
-  "module": "dist/WalletFrame.module.js",
   "unpkg": "dist/WalletFrame.umd.js",
   "scripts": {
     "build": "microbundle --name WalletFrame",
