@@ -131,7 +131,12 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
                 throw new Error('eth_sign: no param provided');
             }
             // throw new Error('eth_sign not supported');
-            const sig = await sdk.signMessage(param1);
+            const sig = await sdk.signMessage(params[0]);
+            result = sig;
+            break;
+        case "personal_sign":
+            const msg = params[0] + (params[2] ? params[2] : '');
+            const sig = await sdk.signMessage(msg);
             result = sig;
             break;
         case "eth_sendRawTransaction":
@@ -167,7 +172,7 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
                 console.warn('user cancelled');
             }
 
-            console.log('debug eth_sendTransaction:', options);
+            console.log('debug eth_sendTransaction:', param1, '--', options);
             await sdk.batchExecuteAccountTransaction(options);
             await sdk.estimateBatch();
             await sdk.submitBatch();
