@@ -7,12 +7,13 @@
   "license": "MIT",
   "source": "src/WalletFrame.js",
   "main": "src/WalletFrame.js",
-  "unpkg": "dist/WalletFrame.umd.js",
+  "unpkg": "dist/web-wallet-frame-sdk.umd.js",
   "scripts": {
-    "build": "microbundle --name WalletFrame",
+    "build": "microbundle --name WalletFrame -o dist",
     "dev": "microbundle watch"
   },
   "dependencies": {
+    "eth-sdk": "^0.2.8",
     "ethers": "^4.0.46"
   },
   "devDependencies": {

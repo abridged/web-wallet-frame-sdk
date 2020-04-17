@@ -1,3 +1,5 @@
+import { toBN } from 'eth-sdk';
+
 export class FrameProvider {
     // pubkey - web wallet public key
     constructor(sdk, windowRef, pubkey) {
@@ -120,30 +122,64 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
         case "eth_getBalance":
             options = hasParams ? {address: params[0]} : {};
             const b = await sdk.getBalance(options);
-            console.log('getBalance', b);
+            // console.log('getBalance', b);
 
-            // FOR TESTING
-            result = '0x' + b.toString(16); // b; //BN to wai?
+            result = '0x' + b.toString(16);
+            break;
+        case "eth_sign":
+            if(!hasParams) {
+                throw new Error('eth_sign: no param provided');
+            }
+            // throw new Error('eth_sign not supported');
+            const sig = await sdk.signMessage(param1);
+            result = sig;
+            break;
+        case "eth_sendRawTransaction":
+            throw new Error('eth_sendRawTransaction not supported');
+            break;
+        case "eth_getTransactionReceipt":
+            throw new Error('eth_getTransactionReceipt not supported');
+            break;
+        case "eth_pendingTransactions":
+            throw new Error('eth_pendingTransactions not supported');
             break;
         case "eth_sendTransaction":
-            if(!hasParams) break;
+            if(!hasParams) {
+                throw new Error('eth_sendTransaction: params provided');
+            }
+            if(!param1.to) {
+                throw new Error('eth_sendTransaction: no To address');
+            }
+            if(!param1.value && !param1.data) {
+                throw new Error('eth_sendTransaction: no value or data to invoke');
+            }
             options = {
                 recipient: param1.to,
                 value: toBN(param1.value),
                 data: param1.data,
-            }; 
+            };
+
+            const prettyMsg = JSON.stringify(options, null, 2);
+            try {
+                await this._doPrompt(prettyMsg);
+            } catch(e) {
+                console.warn('user cancelled');
+            }
+
+            console.log('debug eth_sendTransaction:', options);
             await sdk.batchExecuteAccountTransaction(options);
             await sdk.estimateBatch();
             await sdk.submitBatch();
             result = [];
             break;
         case "eth_gasPrice":
-            result = "0x0";
+            // To do: make accurate
+            result = "0x09184e72a000";
             break;
         case "web3_clientVersion":
             result = "3frame/0.0.11";
         default:
-            console.warn("non implemented event:", data);
+            console.warn("non implemented event:", method, data);
             result = "";
     }
 

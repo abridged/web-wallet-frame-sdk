@@ -222,7 +222,7 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@eth-sdk/contract@^0.2.2":
+"@eth-sdk/contract@^0.2.2", "@eth-sdk/contract@^0.2.8":
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/@eth-sdk/contract/-/contract-0.2.8.tgz#77cc84e66bc69a3715f91472040609997b174a36"
   integrity sha512-Wg1/HGwgjWH9AOeRNu/DQ5/hjHz1ob+GXGFrxJj/3Rzh3nPvdA4oFsJ+96F3hOMNa5sgdUywjyUmMWRD0NzV9A==
@@ -232,7 +232,7 @@
     "@types/node" "12.12.9"
     rxjs "6.5.3"
 
-"@eth-sdk/key@^0.2.2":
+"@eth-sdk/key@^0.2.2", "@eth-sdk/key@^0.2.8":
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/@eth-sdk/key/-/key-0.2.8.tgz#9a97edd0a10078599ec32b31529d5c36f901d4c1"
   integrity sha512-O96tWeu6N9bOTtsVHaxci9hLKuZbKf53EXtZyi3rnQcmzgkR7tlpVhg2gaenw2D61v7+/3v787AbvvOcTcl0iA==
@@ -1469,6 +1469,17 @@ eth-sdk@0.2.2:
     "@eth-sdk/key" "^0.2.2"
     "@eth-sdk/query" "^0.2.2"
     "@eth-sdk/utils" "^0.2.1"
+    "@types/node" "12.12.9"
+
+eth-sdk@^0.2.8:
+  version "0.2.8"
+  resolved "https://registry.yarnpkg.com/eth-sdk/-/eth-sdk-0.2.8.tgz#db98b0ecba05341612bd00083db4047d9935d30d"
+  integrity sha512-Fp3cANHPIBp8V5QqHwAcQrP7nTPtN8b2SH3+psUdeVb5DZAqPdF7GKxgzw1+YezqjYyTIPZX71MfHacWo8PK6A==
+  dependencies:
+    "@eth-sdk/contract" "^0.2.8"
+    "@eth-sdk/key" "^0.2.8"
+    "@eth-sdk/query" "^0.2.8"
+    "@eth-sdk/utils" "^0.2.8"
     "@types/node" "12.12.9"
 
 ethereumjs-common@1.5.0, ethereumjs-common@^1.3.1:
