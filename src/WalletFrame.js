@@ -135,9 +135,11 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             result = sig;
             break;
         case "personal_sign":
+            // params[2] is pw
+            // TODO: cleanup
             const msg = params[0] + (params[2] ? params[2] : '');
-            const sig = await sdk.signMessage(msg);
-            result = sig;
+            const psig = await sdk.signMessage(msg);
+            result = psig;
             break;
         case "eth_sendRawTransaction":
             throw new Error('eth_sendRawTransaction not supported');
