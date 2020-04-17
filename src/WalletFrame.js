@@ -171,7 +171,9 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             await sdk.batchExecuteAccountTransaction(options);
             await sdk.estimateBatch();
             await sdk.submitBatch();
-            result = [];
+
+            //Returns DATA, 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available.
+            result = '0x0';
             break;
         case "eth_gasPrice":
             // To do: make accurate
