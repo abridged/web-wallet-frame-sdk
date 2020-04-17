@@ -143,6 +143,7 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
         case "eth_pendingTransactions":
             throw new Error('eth_pendingTransactions not supported');
             break;
+        case "eth_call":
         case "eth_sendTransaction":
             if(!hasParams) {
                 throw new Error('eth_sendTransaction: params provided');
