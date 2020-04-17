@@ -22,13 +22,17 @@ export class FrameProvider {
     async _doPrompt(msg) {
         let prompt = this.prompt;
         if(!prompt) prompt = function(msg, approve, reject) {
-            var retVal = confirm("Do you want to continue? Transaction: " + msg);
+            var retVal = confirm("Do you want to continue? \nTransaction: " + msg);
             if(retVal) approve();
             else reject();
         };
 
-        var p = new Promise( (resolutionFunc, rejectionFunc) => {
-            prompt(msg, resolutionFunc, rejectionFunc);
+        var p = new Promise( (resolutionFunc) => {
+            prompt(msg, ()=>{
+                resolutionFunc(true);
+            }, () => {
+                resolutionFunc(false);
+            });
         });
     
         return await p;
@@ -72,7 +76,7 @@ export class FrameProvider {
         // console.log("handleIframeTask state.account", this.account);
 
         if (data.jsonrpc) {
-            handleMsg(data, this.account, this.iframRef, this.sdk); // state.account
+            handleMsg(data, this.account, this.iframRef, this.sdk, this); // state.account
         }
     }
 
@@ -92,7 +96,7 @@ export class FrameProvider {
 
 // export default FrameProvider;
 let _i = 0;
-const handleMsg = async(data, acct, refiFrame, sdk) => {
+const handleMsg = async(data, acct, refiFrame, sdk, _this) => {
     // const provider = window.ethereum;
     const method = data.method;
     const params = data.params; // TODO
@@ -168,10 +172,10 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             };
 
             const prettyMsg = JSON.stringify(options, null, 2);
-            try {
-                await this._doPrompt(prettyMsg);
-            } catch(e) {
+            const accepted = await _this._doPrompt(prettyMsg);
+            if(!accepted) {
                 console.warn('user cancelled');
+                break;
             }
 
             console.log('debug eth_sendTransaction:', param1, '--', options);
