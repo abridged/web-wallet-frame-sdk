@@ -17,6 +17,15 @@ The parent iFrame should be constructed like:
     
     let wallet = new FrameProvider(sdk, window, WALLET_PUB_KEY);
 
+    // Set custom UI transaction prompt
+    wallet.setPrompt( function(msg, approve, reject) {
+        var retVal = confirm("Do you want to continue? Transaction: " + msg);
+        // Approve transaction
+        if(retVal) approve();
+        // Reject transaction
+        else reject();
+    });
+
     // The setup function will change the iFrame object src to the target location and start listening for web3 calls from child.
     //
     // refiFrame - current iFrame reference to iFrame dom object
