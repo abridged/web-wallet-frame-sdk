@@ -33,5 +33,5 @@ import '@jadbox/iframe-provider-polyfill'
 
 or add via html:
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@jadbox/iframe-provider-polyfill" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/@jadbox/iframe-provider-polyfill/dist/index.js" type="text/javascript"></script>
 ```

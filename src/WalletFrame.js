@@ -12,9 +12,17 @@ export class FrameProvider {
         this._handleIframeTask = this.handleIframeTask.bind(this);
     }
 
+    async destroy() {
+        this._window.addEventListener("message", this._handleIframeTask);
+    }
+
     async setup(iframRef, frameSrc) {
         if (!this.pubkey && !this.account) throw new Error("provide pub address");
         if(!iframRef) throw new Error('frame reference is not set: setup(iframRef, frameSrc)');
+
+        if(this.iframRef) {
+            destroy();
+        }
 
         this.frameSrc = frameSrc;
         this.iframRef = iframRef;
@@ -22,9 +30,11 @@ export class FrameProvider {
         this._window.addEventListener("message", this._handleIframeTask);
 
         const p = new Promise(x => {
-            this.iframRef.addEventListener("load", ()=>{
+            const onLoad = ()=>{
+                this.iframRef.removeEventListener("load", onLoad);
                 x();
-            });
+            };
+            this.iframRef.addEventListener("load", onLoad);
         });
         this.iframRef.src = frameSrc;
         return p;
@@ -59,7 +69,7 @@ export class FrameProvider {
 }
 
 // export default FrameProvider;
-
+let _i = 0;
 const handleMsg = async(data, acct, refiFrame, sdk) => {
     // const provider = window.ethereum;
     const method = data.method;
@@ -69,7 +79,9 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
     console.log("handleIframeTask", data);
     let response = {
         jsonrpc: jsonrpc,
-        id: data.id
+        id: data.id,
+        // id: ++_i 
+        // ...data
     };
 
     const hasParams = params && params.length > 0;
@@ -91,7 +103,7 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
             console.log('getBalance', b);
 
             // FOR TESTING
-            result = '0x0' + b.toString(16); // b; //BN to wai?
+            result = '0x' + b.toString(16); // b; //BN to wai?
             break;
         case "eth_sendTransaction":
             if(!hasParams) break;
@@ -100,7 +112,7 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
                 value: toBN(param1.value),
                 data: param1.data,
             }; 
-            const batch = await sdk.batchExecuteAccountTransaction(options);
+            await sdk.batchExecuteAccountTransaction(options);
             await sdk.estimateBatch();
             await sdk.submitBatch();
             result = [];
@@ -116,7 +128,7 @@ const handleMsg = async(data, acct, refiFrame, sdk) => {
     }
 
     if(result!==null) {
-        response.result = {result:result};
+        response.result = result;
     }
 
     const msg = {
