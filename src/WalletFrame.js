@@ -149,7 +149,10 @@ const handleMsg = async(data, acct, refiFrame, sdk, _this) => {
             throw new Error('eth_sendRawTransaction not supported');
             break;
         case "eth_getTransactionReceipt":
-            throw new Error('eth_getTransactionReceipt not supported');
+            // TODO! 
+            // https://web3js.readthedocs.io/en/v1.2.1/web3-eth.html
+            result = { status: true, transactionHash: param1 };
+            // throw new Error('eth_getTransactionReceipt not supported');
             break;
         case "eth_pendingTransactions":
             throw new Error('eth_pendingTransactions not supported');
