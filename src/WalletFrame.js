@@ -168,23 +168,33 @@ const handleMsg = async(data, acct, refiFrame, sdk, _this) => {
             if(!param1.value && !param1.data) {
                 throw new Error('eth_sendTransaction: no value or data to invoke');
             }
+
             options = {
                 recipient: param1.to,
                 value: toBN(param1.value),
                 data: param1.data,
             };
 
-            const prettyMsg = JSON.stringify(options, null, 2);
+            const optionsPretty = {
+                ...options,
+                // value_as_eth: toBN(param1.value).div(toBN("1000000000000000000")).toString()
+            };
+            // 
+
+            const prettyMsg = JSON.stringify(optionsPretty, null, 2);
             const accepted = await _this._doPrompt(prettyMsg);
             if(!accepted) {
                 console.warn('user cancelled');
-                break;
+                return;
             }
 
             console.log('debug eth_sendTransaction:', param1, '--', options);
-            await sdk.batchExecuteAccountTransaction(options);
+            const batch = await sdk.batchExecuteAccountTransaction(options);
             await sdk.estimateBatch();
-            await sdk.submitBatch();
+            const response = await sdk.submitBatch();
+
+            console.log('batch', batch);
+            console.log('response', response);
 
             //Returns DATA, 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available.
             result = '0x0';
