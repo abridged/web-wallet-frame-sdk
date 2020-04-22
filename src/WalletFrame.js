@@ -44,16 +44,18 @@ export class FrameProvider {
   }
 
   async destroy() {
-    this._window.addEventListener("message", this._handleIframeTask);
+    this.frameSrc = null; // flag as destroyed
+    this._window.removeEventListener("message", this._handleIframeTask);
   }
 
   async setup(iframRef, frameSrc) {
     if (!this.pubkey && !this.account) throw new Error("provide pub address");
     if (!iframRef)
       throw new Error("frame reference is not set: setup(iframRef, frameSrc)");
-
+    if(!frameSrc)
+        throw new Error('no iFrame src');
     if (this.iframRef) {
-      destroy();
+      this.destroy();
     }
 
     this.frameSrc = frameSrc;
@@ -62,6 +64,10 @@ export class FrameProvider {
     const p = new Promise((x) => {
       const onLoad = () => {
         this.iframRef.removeEventListener("load", onLoad);
+
+        if(!this.frameSrc) {
+            throw new Error('setup failed, already destroyed'); // destroyed
+        }
         this._window.addEventListener("message", this._handleIframeTask);
         x();
       };
@@ -71,11 +77,9 @@ export class FrameProvider {
     return p;
   }
 
-  stop() {
-    this._window.removeEventListener("message", this._handleIframeTask);
-  }
-
   handleIframeTask(event) {
+    if (!this.iframRef || !this.frameSrc) return;
+
     const data = event.data;
 
     // console.log("handleIframeTask state.account", this.account);
@@ -172,12 +176,12 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       if (param0 === "newHeads") {
         result = "0x" + id.toString(16);
 
-        if(subIDHash[id]) {
-            console.warn('already subscribed: ' + param0);
-            return;
+        if (subIDHash[id]) {
+          console.warn("already subscribed: " + param0);
+          return;
         }
         subIDHash[id] = params;
-        
+
         // subEvents[param0] = result;
 
         // HACK to make confirmation work
@@ -187,10 +191,10 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
               method: "eth_subscription",
               params: {
                 result: {
-                    highestBlock: 0,
-                    currentBlock: 201
+                  highestBlock: 0,
+                  currentBlock: 201,
                 },
-                subscription: result
+                subscription: result,
               },
             },
             refiFrame
@@ -217,10 +221,10 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         throw new Error("eth_sendTransaction: no value or data to invoke");
       }
 
-      if(false) {
-          // for testing
+      if (true) {
+        // for testing
         result = "0x0";
-        if(true) break;
+        if (true) break;
         return;
       }
 
@@ -261,8 +265,9 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     case "web3_clientVersion":
       result = "3frame/0.0.11";
     default:
-      console.warn("non implemented event:", method, data);
-      result = "";
+      // console.warn("non implemented event:", method, data);
+      throw new Error(method + ' not supported');
+      // result = "";
   }
 
   if (result !== null) {
@@ -273,9 +278,9 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 };
 
 function sendMessage(msg, refiFrame) {
-    if(!refiFrame) {
-        throw new Error('null reference to refiFrame')
-    }
+  if (!refiFrame) {
+    throw new Error("null reference to refiFrame");
+  }
   const msgObj = {
     jsonrpc: "2.0",
     ...msg,
