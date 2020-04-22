@@ -32,6 +32,9 @@ The parent iFrame should be constructed like:
     // frameSrc - url for the IFrame to load once provider is loaded
     
     await wallet.setup(refiFrame, frameSrc);
+
+    // Be sure to call this if your React component unloads or redraws
+    wallet.destroy();
 ```
 
 The child iFrame should import the polyfill:
