@@ -221,7 +221,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         throw new Error("eth_sendTransaction: no value or data to invoke");
       }
 
-      if (true) {
+      if (false) {
         // for testing
         result = "0x0";
         if (true) break;
@@ -247,7 +247,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         return;
       }
 
-      console.log("debug eth_sendTransaction:", param0, "--", options);
+      // console.log("debug eth_sendTransaction:", param0, "--", options);
       const batch = await sdk.batchExecuteAccountTransaction(options);
       await sdk.estimateBatch();
       const response = await sdk.submitBatch();
