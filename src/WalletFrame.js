@@ -164,7 +164,14 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     case "eth_getTransactionReceipt":
       // TODO!
       // https://web3js.readthedocs.io/en/v1.2.1/web3-eth.html
-      result = { status: true, transactionHash: param0, blockHash: 0 };
+      result = { 
+        status: true, 
+        transactionHash: param0, 
+        blockNumber: 0,
+        blockHash: 0,
+        transactionIndex: 0,
+        gasUsed: 0
+    };
       // throw new Error('eth_getTransactionReceipt not supported');
       break;
     case "eth_pendingTransactions":
@@ -221,6 +228,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         throw new Error("eth_sendTransaction: no value or data to invoke");
       }
 
+      // For debugging only
       if (false) {
         // for testing
         result = "0x0";
