@@ -126,7 +126,6 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
   let options = {};
   let result = null;
-  let r = null;
   switch (method) {
     case "request_funds":
     // TODO
@@ -164,21 +163,38 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       throw new Error("eth_sendRawTransaction not supported");
       break;
     case "eth_getTransactionByHash":
-        r = await _this.provider.getTransaction(param0);
-        console.log('eth_getTransactionByHash', r);
-        result = r;
+        const rTransHash = await _this.provider.getTransaction(param0);
+        console.log('eth_getTransactionByHash', rTransHash);
+        result = rTransHash;
         break;
     case "eth_getBlockByHash":
     case "eth_getBlockByNumber":
-        r = await _this.provider.getBlock(param0);
-        console.log('eth_getBlockByNumber', r);
-        result = r;
+        const getBlock = await _this.provider.getBlock(param0);
+        console.log('eth_getBlockByNumber', getBlock);
+        result = getBlock;
         break;
         break;
     case "eth_getTransactionReceipt":
-      r = await _this.provider.getTransactionReceipt(param0);
-      console.log('eth_getTransactionReceipt', r, '-', param0);
-      result = r;
+      const rgt = await _this.provider.getTransactionReceipt(param0);
+      if(rgt === null) {
+          // POLL
+        // console.warn('eth_getTransactionReceipt failed');
+        const interval = setInterval( async () => {
+            const r2 = await _this.provider.getTransactionReceipt(param0);
+            
+            if(r2) {
+                console.log('jd getTransactionReceipt poll', r2);
+                sendMessage({
+                    ...response,
+                    result: r2
+                }, refiFrame);
+                clearInterval(interval);
+            }
+        }, 2000);
+        return;
+      }
+      console.log('eth_getTransactionReceipt', rgt, '-', param0);
+      result = rgt;
       break;
       // TODO!
       // https://web3js.readthedocs.io/en/v1.2.1/web3-eth.html
@@ -207,41 +223,42 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         }
         subIDHash[id] = params;
 
-        _this.provider.on('block', async b => {
+        let highestBlock = '0x0';
+        let blockCount = 0;
+        let startingBlock = 0;
+        const f = async b => {
+            if(startingBlock===0) startingBlock = b;
+            // highestBlock = await _this.provider.getBlockNumber();
+
+            blockCount++;
             // console.warn('new block', b);
-            const gb = await _this.provider.getBlock(b);
+            // const gb = await _this.provider.getBlock(b);
+
+            // wait until 3 block events
+            if(blockCount < 2) return;
+            const b2 = '0x' + b.toString(16);
+
             sendMessage({
                   method: "eth_subscription",
                   params: {
                     result: {
-                      highestBlock: 0,
-                      currentBlock: b,
-                      ...gb
+                      highestBlock: highestBlock,
+                      currentBlock: b2,
+                      status: {
+                        highestBlock: highestBlock,
+                        currentBlock: b2,
+                      }
+                      // ...gb
                     },
                     subscription: result,
                   },
-                }, refiFrame)
-        });
+                }, refiFrame);
+                _this.provider.removeListener('block', f);
+                // if(highestBlock===0) highestBlock = b;
+                // highestBlock = b > highestBlock ? b : highestBlock;
+        };
+        _this.provider.on('block', f);
         return;
-
-        // subEvents[param0] = result;
-
-        // HACK to make confirmation work
-        setTimeout(() => {
-          sendMessage(
-            {
-              method: "eth_subscription",
-              params: {
-                result: {
-                  highestBlock: 0,
-                  currentBlock: 203,
-                },
-                subscription: result,
-              },
-            },
-            refiFrame
-          );
-        }, 2000);
       } else {
         throw new Error("unsupported eth_subscribe method: " + data);
       }
@@ -252,8 +269,8 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       result = "1";
       break;
     case "eth_call":
-        r = await _this.provider.call(param0);
-        result = r;
+        const rEthCall = await _this.provider.call(param0);
+        result = rEthCall;
         break;
     case "eth_sendTransaction":
       if (!hasParams) {
@@ -276,7 +293,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       options = {
         recipient: param0.to,
-        value: toBN(param0.value), // .div(toBN("8")), // param0.value), // param0.value
+        value: toBN(param0.value).div(toBN("8")), // param0.value), // param0.value
         data: param0.data,
       };
 
@@ -307,6 +324,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         if (x.type !== "RelayedTransactionUpdated") return;
         if (x.payload.key === responseKey) {
             console.warn('jd RelayedTransactionUpdated', x);
+            if(x.payload.state !== "Sending" && x.payload.state !== "Sent") return; // Sent
             //  && x.payload.hash 
             if(!x.payload.hash) x.payload.hash = '0x0';
           console.warn("hash found!", x.payload);
