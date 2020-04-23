@@ -1,5 +1,5 @@
 import { toBN } from "eth-sdk";
-
+// https://api.infura.io/v1/jsonrpc/mainnet
 export class FrameProvider {
   // pubkey - web wallet public key
   constructor(sdk, windowRef, pubkey) {
@@ -10,6 +10,8 @@ export class FrameProvider {
     this._window = windowRef;
     this.pubkey = pubkey;
     this.account = pubkey;
+
+    // this.sdk.state$.notification$.subscribe();
 
     this._handleIframeTask = this.handleIframeTask.bind(this);
   }
@@ -52,8 +54,7 @@ export class FrameProvider {
     if (!this.pubkey && !this.account) throw new Error("provide pub address");
     if (!iframRef)
       throw new Error("frame reference is not set: setup(iframRef, frameSrc)");
-    if(!frameSrc)
-        throw new Error('no iFrame src');
+    if (!frameSrc) throw new Error("no iFrame src");
     if (this.iframRef) {
       this.destroy();
     }
@@ -65,8 +66,8 @@ export class FrameProvider {
       const onLoad = () => {
         this.iframRef.removeEventListener("load", onLoad);
 
-        if(!this.frameSrc) {
-            throw new Error('setup failed, already destroyed'); // destroyed
+        if (!this.frameSrc) {
+          throw new Error("setup failed, already destroyed"); // destroyed
         }
         this._window.addEventListener("message", this._handleIframeTask);
         x();
@@ -164,14 +165,14 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     case "eth_getTransactionReceipt":
       // TODO!
       // https://web3js.readthedocs.io/en/v1.2.1/web3-eth.html
-      result = { 
-        status: true, 
-        transactionHash: param0, 
-        blockNumber: 0,
-        blockHash: 0,
-        transactionIndex: 0,
-        gasUsed: 0
-    };
+      result = {
+        status: "0x1",
+        transactionHash: param0,
+        blockNumber: 1,
+        blockHash: 1, // MUST not be one
+        transactionIndex: 1,
+        gasUsed: 0,
+      };
       // throw new Error('eth_getTransactionReceipt not supported');
       break;
     case "eth_pendingTransactions":
@@ -199,14 +200,14 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
               params: {
                 result: {
                   highestBlock: 0,
-                  currentBlock: 201,
+                  currentBlock: 203,
                 },
                 subscription: result,
               },
             },
             refiFrame
           );
-        }, 3000);
+        }, 2000);
       } else {
         throw new Error("unsupported eth_subscribe method: " + data);
       }
@@ -238,7 +239,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       options = {
         recipient: param0.to,
-        value: toBN(param0.value),
+        value: toBN(param0.value), // param0.value
         data: param0.data,
       };
 
@@ -256,16 +257,32 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       }
 
       // console.log("debug eth_sendTransaction:", param0, "--", options);
-      const batch = await sdk.batchExecuteAccountTransaction(options);
+      await sdk.batchExecuteAccountTransaction(options);
       await sdk.estimateBatch();
-      const response = await sdk.submitBatch();
+      const responseKey = await sdk.submitBatch();
 
-      console.log("batch", batch);
-      console.log("response", response);
+      // console.log("batch", batch);
+      // console.log("responseKey", responseKey);
+
+      const sub = sdk.state$.notification$.subscribe((x) => {
+        if (!x || !x.payload) return;
+        // console.log('jd x', x);
+        if (x.type !== "RelayedTransactionUpdated") return;
+        if (x.payload.key === responseKey) {
+          console.warn("hash found!");
+          const trHash = x.payload.hash;
+          response.result = trHash;
+          sendMessage(response, refiFrame);
+
+          // unsub
+          sub.unsubscribe();
+        }
+      });
 
       //Returns DATA, 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available.
-      result = "0x0";
-      break;
+      // result = trHash; // "0x0";
+      return;
+    // break;
     case "eth_gasPrice":
       // To do: make accurate
       result = "0x09184e72a000";
@@ -274,8 +291,8 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       result = "3frame/0.0.11";
     default:
       // console.warn("non implemented event:", method, data);
-      throw new Error(method + ' not supported');
-      // result = "";
+      throw new Error(method + " not supported");
+    // result = "";
   }
 
   if (result !== null) {
