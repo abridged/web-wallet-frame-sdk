@@ -293,7 +293,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       options = {
         recipient: param0.to,
-        value: toBN(param0.value).div(toBN("8")), // param0.value), // param0.value
+        value: toBN(param0.value), // .div(toBN("8")), // param0.value), // param0.value
         data: param0.data,
       };
 
