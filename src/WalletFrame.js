@@ -1,4 +1,5 @@
 import { toBN } from "eth-sdk";
+import { ethers } from 'ethers';
 // https://api.infura.io/v1/jsonrpc/mainnet
 export class FrameProvider {
   // pubkey - web wallet public key
@@ -10,7 +11,7 @@ export class FrameProvider {
     this._window = windowRef;
     this.pubkey = pubkey;
     this.account = pubkey;
-
+    this.provider = ethers.getDefaultProvider("homestead");
     // this.sdk.state$.notification$.subscribe();
 
     this._handleIframeTask = this.handleIframeTask.bind(this);
@@ -104,10 +105,9 @@ export class FrameProvider {
   }
 }
 
-// let subIDs = 0;
 let subIDHash = {};
-let subEvents = {};
 const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
+    if(!refiFrame) throw new Error('no refiFrame');
   // const provider = window.ethereum;
   const method = data.method;
   const params = data.params; // TODO
@@ -126,6 +126,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
   let options = {};
   let result = null;
+  let r = null;
   switch (method) {
     case "request_funds":
     // TODO
@@ -162,7 +163,23 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     case "eth_sendRawTransaction":
       throw new Error("eth_sendRawTransaction not supported");
       break;
+    case "eth_getTransactionByHash":
+        r = await _this.provider.getTransaction(param0);
+        console.log('eth_getTransactionByHash', r);
+        result = r;
+        break;
+    case "eth_getBlockByHash":
+    case "eth_getBlockByNumber":
+        r = await _this.provider.getBlock(param0);
+        console.log('eth_getBlockByNumber', r);
+        result = r;
+        break;
+        break;
     case "eth_getTransactionReceipt":
+      r = await _this.provider.getTransactionReceipt(param0);
+      console.log('eth_getTransactionReceipt', r, '-', param0);
+      result = r;
+      break;
       // TODO!
       // https://web3js.readthedocs.io/en/v1.2.1/web3-eth.html
       result = {
@@ -189,6 +206,23 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
           return;
         }
         subIDHash[id] = params;
+
+        _this.provider.on('block', async b => {
+            // console.warn('new block', b);
+            const gb = await _this.provider.getBlock(b);
+            sendMessage({
+                  method: "eth_subscription",
+                  params: {
+                    result: {
+                      highestBlock: 0,
+                      currentBlock: b,
+                      ...gb
+                    },
+                    subscription: result,
+                  },
+                }, refiFrame)
+        });
+        return;
 
         // subEvents[param0] = result;
 
@@ -218,6 +252,9 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       result = "1";
       break;
     case "eth_call":
+        r = await _this.provider.call(param0);
+        result = r;
+        break;
     case "eth_sendTransaction":
       if (!hasParams) {
         throw new Error("eth_sendTransaction: params provided");
@@ -239,7 +276,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       options = {
         recipient: param0.to,
-        value: toBN(param0.value), // param0.value
+        value: toBN(param0.value), // .div(toBN("8")), // param0.value), // param0.value
         data: param0.data,
       };
 
@@ -266,10 +303,13 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       const sub = sdk.state$.notification$.subscribe((x) => {
         if (!x || !x.payload) return;
-        // console.log('jd x', x);
+        
         if (x.type !== "RelayedTransactionUpdated") return;
         if (x.payload.key === responseKey) {
-          console.warn("hash found!");
+            console.warn('jd RelayedTransactionUpdated', x);
+            //  && x.payload.hash 
+            if(!x.payload.hash) x.payload.hash = '0x0';
+          console.warn("hash found!", x.payload);
           const trHash = x.payload.hash;
           response.result = trHash;
           sendMessage(response, refiFrame);
@@ -285,7 +325,9 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     // break;
     case "eth_gasPrice":
       // To do: make accurate
-      result = "0x09184e72a000";
+      // result = "0x09184e72a000";
+      result = await _this.provider.getGasPrice();
+      result = result.toString();
       break;
     case "web3_clientVersion":
       result = "3frame/0.0.11";
