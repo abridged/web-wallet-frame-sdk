@@ -284,15 +284,13 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       options = {
         recipient: param0.to,
-        value: toBN(0).div(toBN("8")), // TODO REMOVE param0.value
+        value: toBN(param0.value), // .div(toBN("8")), // param0.value
         data: param0.data,
       };
 
       const optionsPretty = {
         ...options,
-        // value_as_eth: toBN(param0.value).div(toBN("1000000000000000000")).toString()
       };
-      //
 
       const prettyMsg = JSON.stringify(optionsPretty, null, 2);
       const accepted = await _this._doPrompt(prettyMsg);
