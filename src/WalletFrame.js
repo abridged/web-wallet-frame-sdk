@@ -1,5 +1,5 @@
 import { toBN } from "eth-sdk";
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 // https://api.infura.io/v1/jsonrpc/mainnet
 export class FrameProvider {
   // pubkey - web wallet public key
@@ -107,7 +107,7 @@ export class FrameProvider {
 
 let subIDHash = {};
 const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
-    if(!refiFrame) throw new Error('no refiFrame');
+  if (!refiFrame) throw new Error("no refiFrame");
   // const provider = window.ethereum;
   const method = data.method;
   const params = data.params; // TODO
@@ -163,59 +163,49 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       throw new Error("eth_sendRawTransaction not supported");
       break;
     case "eth_getTransactionByHash":
-        const rTransHash = await _this.provider.getTransaction(param0);
-        console.log('eth_getTransactionByHash', rTransHash);
-        result = rTransHash;
-        break;
+      const rTransHash = await _this.provider.getTransaction(param0);
+      console.log("eth_getTransactionByHash", rTransHash);
+      result = rTransHash;
+      break;
     case "eth_getBlockByHash":
     case "eth_getBlockByNumber":
-        const getBlock = await _this.provider.getBlock(param0);
-        console.log('eth_getBlockByNumber', getBlock);
-        result = getBlock;
-        break;
-        break;
+      const getBlock = await _this.provider.getBlock(param0);
+      console.log("eth_getBlockByNumber", getBlock);
+      result = getBlock;
+      break;
+      break;
     case "eth_getTransactionReceipt":
-      const rgt = await _this.provider.getTransactionReceipt(param0);
-      if(rgt === null) {
-          // POLL
-        // console.warn('eth_getTransactionReceipt failed');
-        const interval = setInterval( async () => {
-            const r2 = await _this.provider.getTransactionReceipt(param0);
-            
-            if(r2) {
-                console.log('jd getTransactionReceipt poll', r2);
-                sendMessage({
-                    ...response,
-                    result: r2
-                }, refiFrame);
-                clearInterval(interval);
-            }
-        }, 2000);
-        return;
-      }
-      console.log('eth_getTransactionReceipt', rgt, '-', param0);
-      result = rgt;
-      break;
-      // TODO!
-      // https://web3js.readthedocs.io/en/v1.2.1/web3-eth.html
-      result = {
-        status: "0x1",
-        transactionHash: param0,
-        blockNumber: 1,
-        blockHash: 1, // MUST not be one
-        transactionIndex: 1,
-        gasUsed: 0,
-      };
-      // throw new Error('eth_getTransactionReceipt not supported');
-      break;
+      const interval = setInterval(async () => {
+        const r2 = await _this.provider.getTransactionReceipt(param0);
+
+        if (r2) {
+          if (r2.cumulativeGasUsed)
+            r2.cumulativeGasUsed = "0x" + r2.cumulativeGasUsed.toString(16);
+          if (r2.gasUsed) r2.gasUsed = "0x" + r2.gasUsed.toString(16);
+
+          console.log("jd getTransactionReceipt polled");
+          sendMessage(
+            {
+              ...response,
+              result: r2,
+            },
+            refiFrame
+          );
+          clearInterval(interval);
+        }
+      }, 2200);
+      return;
     case "eth_pendingTransactions":
       throw new Error("eth_pendingTransactions not supported");
+      break;
+    case "eth_unsubscribe":
+      console.warn("eth_unsubscribe unsupported");
       break;
     case "eth_subscribe":
       console.warn("eth_subscribe stubbed");
       // pubsub: https://github.com/ethereum/go-ethereum/wiki/RPC-PUB-SUB
       if (param0 === "newHeads") {
-        result = "0x" + id.toString(16);
+        const resultId = "0x" + id.toString(16);
 
         if (subIDHash[id]) {
           console.warn("already subscribed: " + param0);
@@ -223,42 +213,43 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
         }
         subIDHash[id] = params;
 
-        let highestBlock = '0x0';
+        // let highestBlock = '0x0';
         let blockCount = 0;
-        let startingBlock = 0;
-        const f = async b => {
-            if(startingBlock===0) startingBlock = b;
-            // highestBlock = await _this.provider.getBlockNumber();
+        // let startingBlock = 0;
+        const f = async (b) => {
+          // if(startingBlock===0) startingBlock = b;
+          // highestBlock = await _this.provider.getBlockNumber();
 
-            blockCount++;
-            // console.warn('new block', b);
-            // const gb = await _this.provider.getBlock(b);
+          blockCount++;
+          // console.warn('new block', b);
+          const gb = await _this.provider.getBlock(b);
 
-            // wait until 3 block events
-            if(blockCount < 2) return;
-            const b2 = '0x' + b.toString(16);
+          // wait until 3 block events
+          // if(blockCount < 2) return;
+          // const b2 = '0x' + b.toString(16);
 
-            sendMessage({
-                  method: "eth_subscription",
-                  params: {
-                    result: {
-                      highestBlock: highestBlock,
-                      currentBlock: b2,
-                      status: {
-                        highestBlock: highestBlock,
-                        currentBlock: b2,
-                      }
-                      // ...gb
-                    },
-                    subscription: result,
-                  },
-                }, refiFrame);
-                _this.provider.removeListener('block', f);
-                // if(highestBlock===0) highestBlock = b;
-                // highestBlock = b > highestBlock ? b : highestBlock;
+          sendMessage(
+            {
+              method: "eth_subscription",
+              params: {
+                result: {
+                  ...gb,
+                },
+                subscription: resultId,
+              },
+            },
+            refiFrame
+          );
+
+          if (blockCount === 10) _this.provider.removeListener("block", f);
+          // if(highestBlock===0) highestBlock = b;
+          // highestBlock = b > highestBlock ? b : highestBlock;
         };
-        _this.provider.on('block', f);
-        return;
+        _this.provider.on("block", f);
+
+        result = resultId;
+        break;
+        // return;
       } else {
         throw new Error("unsupported eth_subscribe method: " + data);
       }
@@ -269,9 +260,9 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       result = "1";
       break;
     case "eth_call":
-        const rEthCall = await _this.provider.call(param0);
-        result = rEthCall;
-        break;
+      const rEthCall = await _this.provider.call(param0);
+      result = rEthCall;
+      break;
     case "eth_sendTransaction":
       if (!hasParams) {
         throw new Error("eth_sendTransaction: params provided");
@@ -293,7 +284,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       options = {
         recipient: param0.to,
-        value: toBN(param0.value), // .div(toBN("8")), // param0.value), // param0.value
+        value: toBN(0).div(toBN("8")), // TODO REMOVE param0.value
         data: param0.data,
       };
 
@@ -320,13 +311,14 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
       const sub = sdk.state$.notification$.subscribe((x) => {
         if (!x || !x.payload) return;
-        
+
         if (x.type !== "RelayedTransactionUpdated") return;
         if (x.payload.key === responseKey) {
-            console.warn('jd RelayedTransactionUpdated', x);
-            if(x.payload.state !== "Sending" && x.payload.state !== "Sent") return; // Sent
-            //  && x.payload.hash 
-            if(!x.payload.hash) x.payload.hash = '0x0';
+          console.warn("jd RelayedTransactionUpdated", x);
+          if (x.payload.state !== "Sending" && x.payload.state !== "Sent")
+            return; // Sent
+          //  && x.payload.hash
+          if (!x.payload.hash) x.payload.hash = "0x0";
           console.warn("hash found!", x.payload);
           const trHash = x.payload.hash;
           response.result = trHash;
@@ -367,10 +359,10 @@ function sendMessage(msg, refiFrame) {
     throw new Error("null reference to refiFrame");
   }
   const msgObj = {
-    jsonrpc: "2.0",
+    jsonrpc: msg.jsonrpc || "2.0",
     ...msg,
   };
-  console.log("responding", msg);
+  console.log("responding", msgObj);
 
   const ref = refiFrame.contentWindow || refiFrame.contentDocument;
   if (!ref) {
