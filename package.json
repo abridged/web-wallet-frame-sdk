@@ -1,6 +1,6 @@
 {
   "name": "@abridged/web-wallet-frame-sdk",
-  "version": "0.0.41",
+  "version": "0.0.42",
   "private": false,
   "repository": "git@github.com:abridged/web-wallet-frame-sdk.git",
   "author": "Jonathan Dunlap <jdunlap@outlook.com>",
