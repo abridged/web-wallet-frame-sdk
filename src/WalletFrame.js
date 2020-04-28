@@ -16,6 +16,7 @@ export class FrameProvider {
     // this.sdk.state$.notification$.subscribe();
 
     this._handleIframeTask = this.handleIframeTask.bind(this);
+    console.log('WalletFrame 0.0.43');
   }
 
   // prompt: ()=>(msg, approve, reject)
@@ -108,16 +109,18 @@ export class FrameProvider {
 
 // Convert all child props from BN to hex, non-recursive
 const convertBNProps = (obj) => {
-  obj = Object.assign({}, obj);
-  const keys = Object.keys(obj);
+  const out = Object.assign({}, obj);
 
-  keys.forEach(k => {
-    const v = obj[k];
-    if(v && BN.isBN(v)) {
-      obj[k] = '0x' + obj[k].toString(16);
+  const keys = Object.entries(out);
+  keys.forEach(entry => {
+    const [k, v] = entry;
+    if(!v) return;
+    if(BN.isBN(obj[k])) {
+      out[k] = '0x' + obj[k].toString(16);
     }
   });
-  return obj;
+
+  return out;
 }
 
 let subIDHash = {};
@@ -184,10 +187,12 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       break;
     case "eth_getBlockByHash":
     case "eth_getBlockByNumber":
-      const getBlock = await _this.provider.getBlock(param0);
-      console.log("eth_getBlockByNumber", getBlock);
+      let getBlock = await _this.provider.getBlock(param0);
+      getBlock = convertBNProps(getBlock);
 
-      result = convertBNProps(getBlock);
+      console.log("eth_getBlockByNumber", getBlock, ',', getBlock.gasLimit);
+
+      result = getBlock;
       break;
       break;
     case "eth_getTransactionReceipt":
