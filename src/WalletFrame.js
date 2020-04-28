@@ -1,5 +1,6 @@
 import { toBN } from "eth-sdk";
 import { ethers } from "ethers";
+const BN = require('bn.js');
 // https://api.infura.io/v1/jsonrpc/mainnet
 export class FrameProvider {
   // pubkey - web wallet public key
@@ -105,6 +106,20 @@ export class FrameProvider {
   }
 }
 
+// Convert all child props from BN to hex, non-recursive
+const convertBNProps = (obj) => {
+  obj = Object.assign({}, obj);
+  const keys = Object.keys(obj);
+
+  keys.forEach(k => {
+    const v = obj[k];
+    if(v && BN.isBN(v)) {
+      obj[k] = '0x' + obj[k].toString(16);
+    }
+  });
+  return obj;
+}
+
 let subIDHash = {};
 const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
   if (!refiFrame) throw new Error("no refiFrame");
@@ -171,7 +186,8 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     case "eth_getBlockByNumber":
       const getBlock = await _this.provider.getBlock(param0);
       console.log("eth_getBlockByNumber", getBlock);
-      result = getBlock;
+
+      result = convertBNProps(getBlock);
       break;
       break;
     case "eth_getTransactionReceipt":
@@ -222,8 +238,8 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
 
           blockCount++;
           // console.warn('new block', b);
-          const gb = await _this.provider.getBlock(b);
-
+          let gb = await _this.provider.getBlock(b);
+          gb = convertBNProps(gb);
           // wait until 3 block events
           // if(blockCount < 2) return;
           // const b2 = '0x' + b.toString(16);

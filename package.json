@@ -13,6 +13,7 @@
     "dev": "microbundle watch"
   },
   "dependencies": {
+    "bn.js": "^5.1.1",
     "eth-sdk": "^0.2.8",
     "ethers": "^4.0.47"
   },
