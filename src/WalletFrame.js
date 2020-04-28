@@ -1,6 +1,6 @@
 import { toBN } from "eth-sdk";
 import { ethers } from "ethers";
-const BN = require('bn.js');
+const BN = require("bn.js");
 // https://api.infura.io/v1/jsonrpc/mainnet
 export class FrameProvider {
   // pubkey - web wallet public key
@@ -16,7 +16,7 @@ export class FrameProvider {
     // this.sdk.state$.notification$.subscribe();
 
     this._handleIframeTask = this.handleIframeTask.bind(this);
-    console.log('WalletFrame 0.0.43');
+    console.log("WalletFrame 0.0.44");
   }
 
   // prompt: ()=>(msg, approve, reject)
@@ -112,16 +112,26 @@ const convertBNProps = (obj) => {
   const out = Object.assign({}, obj);
 
   const keys = Object.entries(out);
-  keys.forEach(entry => {
+  keys.forEach((entry) => {
     const [k, v] = entry;
-    if(!v) return;
-    if(BN.isBN(obj[k])) {
-      out[k] = '0x' + obj[k].toString(16);
+    if (!v) return;
+
+    if (obj[k].toHexString) {
+      out[k] = obj[k].toHexString();
+      // console.log("toHexString", v._hex, out[k]);
+    } else if (BN.isBN(obj[k])) {
+      // PROBABLY DEAD PATH
+      // console.log("v.BN", v._hex, obj[k].toString(16));
+      out[k] = "0x" + obj[k].toString(16);
+    } else if (v._hex) {
+      // PROBABLY DEAD PATH
+      // console.log("v._hex", v._hex, obj[k].toString(16));
+      out[k] = v._hex;
     }
   });
 
   return out;
-}
+};
 
 let subIDHash = {};
 const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
@@ -190,19 +200,19 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       let getBlock = await _this.provider.getBlock(param0);
       getBlock = convertBNProps(getBlock);
 
-      console.log("eth_getBlockByNumber", getBlock, ',', getBlock.gasLimit);
+      console.log("eth_getBlockByNumber", getBlock, ",", getBlock.gasLimit);
 
       result = getBlock;
       break;
       break;
     case "eth_getTransactionReceipt":
       const interval = setInterval(async () => {
-        const r2 = await _this.provider.getTransactionReceipt(param0);
+        let r2 = await _this.provider.getTransactionReceipt(param0);
 
         if (r2) {
-          if (r2.cumulativeGasUsed)
-            r2.cumulativeGasUsed = "0x" + r2.cumulativeGasUsed.toString(16);
-          if (r2.gasUsed) r2.gasUsed = "0x" + r2.gasUsed.toString(16);
+          r2 = convertBNProps(r2);
+          //  r2.cumulativeGasUsed = "0x" + r2.cumulativeGasUsed.toString(16);
+          // if (r2.gasUsed) r2.gasUsed = "0x" + r2.gasUsed.toString(16);
 
           console.log("jd getTransactionReceipt polled");
           sendMessage(
