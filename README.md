@@ -26,6 +26,19 @@ The parent iFrame should be constructed like:
         else reject();
     });
 
+    // Ramp
+    wallet.setRamp( aysnc function(action, token) {
+        if(action==="buy") {
+            if(token === null) console.log('wants to buy eth");
+            else console.log('wants to buy", token);
+        }
+        if(action==="sell") {
+            if(token === null) console.log('wants to sell eth");
+             else console.log('wants to buy", token);
+        }
+        return true; // if successful
+    });
+
     // The setup function will change the iFrame object src to the target location and start listening for web3 calls from child.
     //
     // refiFrame - current iFrame reference to iFrame dom object

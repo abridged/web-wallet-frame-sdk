@@ -24,6 +24,16 @@ export class FrameProvider {
     this.prompt = prompt;
   }
 
+  // rampt: async (action:"buy" | "sell", token:string|null) => boolean
+  setRamp(ramp) {
+    this.ramp = ramp;
+  }
+
+  // auth: () => authid
+  /* setAuth(onAuth) {
+    this.onAuth = onAuth;
+  } */
+
   async _doPrompt(msg) {
     let prompt = this.prompt;
     if (!prompt)
@@ -290,6 +300,15 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
     case 'eth_call':
       const rEthCall = await _this.provider.call(param0);
       result = rEthCall;
+      break;
+    case "ramp":
+      if(!this.ramp) {
+        console.log('no ramp handler');
+        return;
+      }
+      const _result = await this.ramp(params[0], params[1]);
+      
+      result = _result;
       break;
     case 'eth_sendTransaction':
       if (!hasParams) {
