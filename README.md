@@ -26,6 +26,21 @@ The parent iFrame should be constructed like:
         else reject();
     });
 
+    // Allows the dapp to request on/off ramp flow to trigger in the web wallet
+    // Can optionally be provided erc20 address to onramp directly to token if possible
+    // Handler is async to allow for waiting on on/off ramp completion
+    wallet.setRamp( aysnc function(action, token) {
+        if(action==="buy") {
+            if(token === null) console.log('wants to buy eth");
+            else console.log('wants to buy", token);
+        }
+        if(action==="sell") {
+            if(token === null) console.log('wants to sell eth");
+             else console.log('wants to buy", token);
+        }
+        return true; // if successful
+    });
+
     // The setup function will change the iFrame object src to the target location and start listening for web3 calls from child.
     //
     // refiFrame - current iFrame reference to iFrame dom object
