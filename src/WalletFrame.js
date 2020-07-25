@@ -169,6 +169,7 @@ const handleMsg = async (data, acct, refiFrame, sdk, _this) => {
       // Metamask specific rpc
       result = [acct];
       break;
+    case 'eth_requestAccounts':
     case 'eth_accounts':
       result = [acct];
       break;
